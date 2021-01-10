@@ -1,0 +1,52 @@
+{#include base.html}
+{#title}Bookmarks{/title}
+{#contents}
+
+<form action="/bookmark/search" method="GET" name="search" up-target=".container">
+    <div class="form-row align-items-center" >
+        <div class="col-sm-3 my-1">
+            <label class="sr-only" for="filter">Search</label>
+            <input type="text" name="tag" class="form-control" id="tag" placeholder="Search for bookmarks" required autofocus {#if filtered}value="{tag}"{/if}>
+        </div>
+
+        <input class="btn btn-primary" style="margin-right: 1em;" value="&#xf002;" type="submit">
+
+        <!-- <a class="btn btn-secondary" style="margin-right: 1em;" {#if !filtered}disabled{/if}" href="/" role="button" up-target=".container">Clear</a> -->
+        <a href="/bookmark/add" role="button" up-modal=".modalenabled"><i class="fas fa-plus fa-2x"></i></a>
+    </div>
+</form>
+
+<div style="margin-top: 15px;">
+    {#if bookmarks.size == 0}
+    {#if filtered}<div>No data found.</div>{/if}
+    {#else}
+    
+    <div><strong>{bookmarks.size} result{#if bookmarks.size > 1}s{/if} found.</strong></div>
+
+    {#for bookmark in bookmarks}
+    <div style="padding-top: 10px;">
+        <div><a href={bookmark.url} target="_blank">{bookmark.name}</a></div>
+        <div style="font-size: 10px;"> {#if bookmark.updationTime}{bookmark.updationTime}{#else}{bookmark.creationTime}{/if}</div>
+        <div>
+            <!-- <form action="/bookmark/{bookmark.id}/delete" method="POST" name="delete-{bookmark.id}"
+                up-target=".container">
+                <a class="btn btn-primary btn-sm" href="/bookmark/{bookmark.id}/edit" role="button"
+                    up-modal=".modalenabled">Edit</a>
+                <input class="btn btn-danger btn-sm" value="Delete" type="submit">
+            </form> -->
+            
+            <a href="/bookmark/{bookmark.id}/edit" role="button" up-modal=".modalenabled"><i class="fas fa-edit"></i>
+
+            </a>
+        </div>
+    </div>
+    {/for}
+    {/if}
+</div>
+
+<!-- <hr>
+<h2>Add Bookmark</h2>
+{#include bookmark-form.html}{/include} -->
+
+{/contents}
+{/include}

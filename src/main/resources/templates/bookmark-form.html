@@ -1,0 +1,30 @@
+<div class="modalenabled" style="width:800px">
+    <h3>{#if update}Update{#else}Add{/if} Bookmark</h3>
+    <hr>
+    <form action="/bookmark/{#if update}{bookmark.id}/edit{#else}{/if}"  method="POST" name="bookmarkForm" up-target=".container" enctype="multipart/form-data">
+    <div class="form-row align-items-center" style="display: block;">
+        <div class="form-group">
+            <label for="name"><strong>Bookmark Name</strong></label>
+            <input type="text" name="name" class="form-control" id="name" placeholder="Name" required autofocus {#if update}value="{bookmark.name}"{/if}>
+        </div>
+
+        <div class="form-group">
+            <label for="url"><strong>Bookmark URL</strong></label>
+            <input type="text" name="url" class="form-control" id="url" placeholder="URL" required autofocus {#if update}value="{bookmark.url}"{/if}>
+        </div>
+
+        <div class="form-group">
+            <label for="tags"><strong>Tags</strong></label>
+            <input type="text" name="tags" class="form-control" id="tags" placeholder="Tags" required autofocus {#if update}value="{bookmark.tags}"{/if}>
+
+            <small id="tagsHelpBlock" class="form-text text-muted">
+                Enter all tags comma separated.
+            </small>
+        </div>
+
+        <div class="col-sm-12 my-1">
+            <button type="submit" class="btn btn-primary">{#if update}Update{#else}Add{/if}</button>
+        </div>
+    </div>
+    </form>
+</div>
