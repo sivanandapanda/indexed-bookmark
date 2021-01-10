@@ -89,6 +89,7 @@ public class LocalSearchService {
 
     private Stream<String> getAllTags(Bookmark bookmark) {
         return Stream.of(bookmark.getTags().split(","))
+                .map(tag -> Stream.of(tag.split(" ")).collect(toList())).flatMap(List::stream)
                 .map(tag -> IntStream.rangeClosed(0, tag.length())
                         .boxed()
                         .map(i -> tag.substring(0, i).toLowerCase())
