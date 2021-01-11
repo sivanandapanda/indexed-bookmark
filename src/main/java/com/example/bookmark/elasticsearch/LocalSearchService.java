@@ -4,10 +4,10 @@ import com.example.bookmark.model.Bookmark;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.Math.toIntExact;
@@ -18,12 +18,12 @@ import static java.util.stream.Collectors.toList;
 public class LocalSearchService {
 
     private final Map<String, List<Bookmark>> cache = new ConcurrentHashMap<>();
+    private static final List<String> ignoredStrings = Arrays.asList(",", ".", "", " ", "-", "--", "=", "'", "\"", "!", "|", "/", ";", "@", "#",
+            "$", "%", "*");
 
     public void index(Bookmark bookmark) {
         try {
-            getAllTags(bookmark)
-                    .map(String::trim)
-                    .map(String::toLowerCase)
+            getAllTags(bookmark).map(String::trim).map(String::toLowerCase)
                     .forEach(tag -> {
                         List<Bookmark> list = cache.getOrDefault(tag, new ArrayList<>());
                         if(!list.contains(bookmark)) {
@@ -43,10 +43,7 @@ public class LocalSearchService {
 
     public void deleteIndex(Bookmark bookmark) {
         try {
-            getAllTags(bookmark)
-                    .map(String::trim)
-                    .map(String::toLowerCase)
-                    .filter(cache::containsKey)
+            getAllTags(bookmark).map(String::trim).map(String::toLowerCase).filter(cache::containsKey)
                     .forEach(tag -> cache.get(tag).removeIf(b -> b.getId().equals(bookmark.getId())));
         } catch (Exception e) {
             e.printStackTrace();
@@ -77,10 +74,7 @@ public class LocalSearchService {
 
     public List<Bookmark> searchAll() {
         try {
-            return cache.values().stream()
-                    .flatMap(List::stream)
-                    .distinct()
-                    .collect(toList());
+            return cache.values().stream().flatMap(List::stream).distinct().collect(toList());
         } catch (Exception e) {
             e.printStackTrace();
             return emptyList();
@@ -88,12 +82,23 @@ public class LocalSearchService {
     }
 
     private Stream<String> getAllTags(Bookmark bookmark) {
-        return Stream.of(bookmark.getTags().split(","))
-                .map(tag -> Stream.of(tag.split(" ")).collect(toList())).flatMap(List::stream)
-                .map(tag -> IntStream.rangeClosed(0, tag.length())
-                        .boxed()
-                        .map(i -> tag.substring(0, i).toLowerCase())
-                        .collect(toList()))
-                .flatMap(List::stream);
+        return Stream.of(bookmark.getTags().split(" ")).parallel()
+                .filter(tag -> !(ignoredStrings.contains(tag)))
+                .map(this::getAllStrings)
+                .flatMap(List::parallelStream);
+    }
+
+    private List<String> getAllStrings(String str) {
+        List<String> strings = new ArrayList<>();
+
+        for (int i = 0; i < str.length(); i++) {
+            for (int j = i; j <= str.length(); j++) {
+                if(j > i) {
+                    strings.add(str.substring(i, j));
+                }
+            }
+        }
+
+        return strings;
     }
 }

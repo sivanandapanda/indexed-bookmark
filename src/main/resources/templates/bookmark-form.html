@@ -1,8 +1,8 @@
 <div class="modalenabled" style="width:800px">
     <h3>{#if update}Update{#else}Add{/if} Bookmark</h3>
     <hr>
-    <form action="/bookmark/{#if update}{bookmark.id}/edit{#else}{/if}"  method="POST" name="bookmarkForm" up-target=".container" enctype="multipart/form-data">
     <div class="form-row align-items-center" style="display: block;">
+        <input type="text" name="id1" id="id" style="display: none;" {#if update}value="{bookmark.id}"{/if}>
         <div class="form-group">
             <label for="name"><strong>Bookmark Name</strong></label>
             <input type="text" name="name" class="form-control" id="name" placeholder="Name" required autofocus {#if update}value="{bookmark.name}"{/if}>
@@ -23,8 +23,7 @@
         </div>
 
         <div class="col-sm-12 my-1">
-            <button type="submit" class="btn btn-primary">{#if update}Update{#else}Add{/if}</button>
+            <button type="submit" class="btn btn-primary" onclick="submit()">{#if update}Update{#else}Add{/if}</button>
         </div>
     </div>
-    </form>
 </div>

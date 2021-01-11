@@ -1,0 +1,60 @@
+<script>
+    function submit(){
+        var name = document.getElementById("name");
+        var url = document.getElementById("url");
+        var tags = document.getElementById("tags");
+        var id = document.getElementById("id");
+
+        if(id && id.value) { //update
+            let idVal = id.value;
+            let uri = "/bookmark/api/"+idVal;
+
+            let payLoad = {"name": name.value, "tags": tags.value, "url": url.value};
+            fetch(uri, {
+                method: 'PATCH',
+                body: JSON.stringify(payLoad),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8'
+                },
+                redirect: 'follow'
+            })
+            .then(response => {
+                // HTTP 301 response
+                if (response.redirected) {
+                    if ((response.url.indexOf("digitalocean") > -1) || response.url.indexOf("heroku") > -1) {
+                        window.location.href = response.url.replace(/^http:\/\//i, 'https://');
+                    } else {
+                        window.location.href = response.url;
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.info(err + " url: " + uri);
+            });
+
+        } else { //add
+            let payLoad = {"name": name.value, "tags": tags.value, "url": url.value};
+            fetch('/bookmark/api', {
+                method: 'POST',
+                body: JSON.stringify(payLoad),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8'
+                },
+                redirect: 'follow'
+            })
+            .then(response => {
+                // HTTP 301 response
+                if (response.redirected) {
+                    if ((response.url.indexOf("digitalocean") > -1) || response.url.indexOf("heroku") > -1) {
+                        window.location.href = response.url.replace(/^http:\/\//i, 'https://');
+                    } else {
+                        window.location.href = response.url;
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.info(err + " for /bookmark/api");
+            });
+        }
+    }
+</script>

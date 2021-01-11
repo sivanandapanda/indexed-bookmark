@@ -1,6 +1,6 @@
 package com.example.bookmark.domain;
 
-import com.example.bookmark.model.BookmarkForm;
+import com.example.bookmark.model.Bookmark;
 import io.quarkus.mongodb.panache.MongoEntity;
 import io.quarkus.mongodb.panache.PanacheMongoEntity;
 import lombok.Getter;
@@ -26,7 +26,7 @@ public class BookmarkDto extends PanacheMongoEntity {
         return super.id;
     }
 
-    public BookmarkDto update(BookmarkForm bookmark) {
+    public BookmarkDto update(Bookmark bookmark) {
         if (Objects.nonNull(bookmark)) {
             boolean isUpdated = false;
             if (hasChanged(bookmark.getName(), this.name)) {
@@ -56,7 +56,7 @@ public class BookmarkDto extends PanacheMongoEntity {
         return Objects.nonNull(obj) && !toCompare.equals(obj);
     }
 
-    public static BookmarkDto createFromModel(BookmarkForm bookmark) {
+    public static BookmarkDto createFromModel(Bookmark bookmark) {
         BookmarkDto dto = new BookmarkDto();
 
         dto.name = bookmark.getName();

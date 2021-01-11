@@ -3,10 +3,8 @@ package com.example.bookmark.jsoup;
 import com.example.bookmark.domain.BookmarkDto;
 import com.example.bookmark.elasticsearch.LocalSearchService;
 import com.example.bookmark.model.Bookmark;
-import com.example.bookmark.model.BookmarkForm;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -36,7 +34,7 @@ public class BookmarkParser {
                     String title = findTitle(document);
                     description.add(title);
 
-                    BookmarkForm bookmarkForm = new BookmarkForm();
+                    Bookmark bookmarkForm = new Bookmark();
                     bookmarkForm.setUrl(link);
                     bookmarkForm.setName(title);
                     bookmarkForm.setTags(String.join(",", description));

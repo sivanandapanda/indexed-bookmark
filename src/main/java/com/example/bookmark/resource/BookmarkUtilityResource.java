@@ -7,7 +7,7 @@ import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-@Path("util")
+@Path("bookmark/util")
 @ApplicationScoped
 public class BookmarkUtilityResource {
 
@@ -15,7 +15,7 @@ public class BookmarkUtilityResource {
     BookmarkParser bookmarkParser;
 
     @GET
-    @Path("bookmark/import")
+    @Path("import")
     public void saveAdd() {
         //bookmarkParser.load();
     }
