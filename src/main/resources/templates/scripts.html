@@ -1,15 +1,15 @@
 <script>
-    function submit(){
+    function submit() {
         var name = document.getElementById("name");
         var url = document.getElementById("url");
         var tags = document.getElementById("tags");
         var id = document.getElementById("id");
 
-        if(id && id.value) { //update
+        if (id && id.value) { //update
             let idVal = id.value;
-            let uri = "/bookmark/api/"+idVal;
+            let uri = "/bookmark/api/" + idVal;
 
-            let payLoad = {"name": name.value, "tags": tags.value, "url": url.value};
+            let payLoad = { "name": name.value, "tags": tags.value, "url": url.value };
             fetch(uri, {
                 method: 'PATCH',
                 body: JSON.stringify(payLoad),
@@ -18,22 +18,11 @@
                 },
                 redirect: 'follow'
             })
-            .then(response => {
-                // HTTP 301 response
-                if (response.redirected) {
-                    if ((response.url.indexOf("digitalocean") > -1) || response.url.indexOf("heroku") > -1) {
-                        window.location.href = response.url.replace(/^http:\/\//i, 'https://');
-                    } else {
-                        window.location.href = response.url;
-                    }
-                }
-            })
-            .catch(function(err) {
-                console.info(err + " url: " + uri);
-            });
+            .then(response => this.handleResponse(response, "Bookmark updated successfully!"))
+            .catch(err => this.updateFormStatus("update request failed with error, " + err, false));
 
         } else { //add
-            let payLoad = {"name": name.value, "tags": tags.value, "url": url.value};
+            let payLoad = { "name": name.value, "tags": tags.value, "url": url.value };
             fetch('/bookmark/api', {
                 method: 'POST',
                 body: JSON.stringify(payLoad),
@@ -42,19 +31,25 @@
                 },
                 redirect: 'follow'
             })
-            .then(response => {
-                // HTTP 301 response
-                if (response.redirected) {
-                    if ((response.url.indexOf("digitalocean") > -1) || response.url.indexOf("heroku") > -1) {
-                        window.location.href = response.url.replace(/^http:\/\//i, 'https://');
-                    } else {
-                        window.location.href = response.url;
-                    }
-                }
-            })
-            .catch(function(err) {
-                console.info(err + " for /bookmark/api");
-            });
+            .then(response => this.handleResponse(response, "Bookmark added successfully!"))
+            .catch(err => this.updateFormStatus("add request failed with error, " + err, false));
+        }
+    }
+
+    function handleResponse(response, message) {
+        if (response.status < 400) {
+            this.updateFormStatus(message, true);
+        } else {
+            this.updateFormStatus("request failed with error, " + response.statusText, false);
+        }
+    }
+
+    function updateFormStatus(message, success) {
+        document.getElementById("bookmarkFormStatus").innerText = message;
+        if (success) {
+            document.getElementById("bookmarkFormStatus").className = "alert alert-success";
+        } else {
+            document.getElementById("bookmarkFormStatus").className = "alert alert-danger";
         }
     }
 </script>

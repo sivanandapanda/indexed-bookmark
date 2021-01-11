@@ -40,3 +40,4 @@ nb-configuration.xml
 testing
 k8s
 webapp
+Dockerfile

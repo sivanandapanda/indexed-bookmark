@@ -1,6 +1,9 @@
 <div class="modalenabled" style="width:800px">
     <h3>{#if update}Update{#else}Add{/if} Bookmark</h3>
     <hr>
+    
+    <div id="bookmarkFormStatus"></div>
+
     <div class="form-row align-items-center" style="display: block;">
         <input type="text" name="id1" id="id" style="display: none;" {#if update}value="{bookmark.id}"{/if}>
         <div class="form-group">

@@ -3,15 +3,12 @@ package com.example.bookmark.resource;
 import com.example.bookmark.domain.BookmarkDto;
 import com.example.bookmark.elasticsearch.LocalSearchService;
 import com.example.bookmark.model.Bookmark;
-import io.quarkus.qute.Template;
-import io.vertx.core.http.HttpServerRequest;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -24,12 +21,6 @@ public class BookmarkAPIResource {
 
     @Inject
     LocalSearchService searchService;
-
-    @Context
-    HttpServerRequest request;
-
-    @Inject
-    Template error;
 
     @GET
     @Counted
@@ -47,44 +38,32 @@ public class BookmarkAPIResource {
         BookmarkDto.persist(bookmarkDto);
         searchService.index(Objects.requireNonNull(Bookmark.fromDto(bookmarkDto)));
 
-        printURIDetails(bookmarkDto);
-
-        return Response.status(Response.Status.MOVED_PERMANENTLY).location(URI.create("/bookmark/" + bookmarkDto.getId().toString())).build();
-    }
-
-    private void printURIDetails(BookmarkDto bookmarkDto) {
-        System.out.println("Absolute URI => " + request.absoluteURI());
-        System.out.println("URI => " + request.uri());
-        System.out.println("Host => " + request.host());
-        System.out.println("Scheme => " + request.scheme());
-        System.out.println("Redirect URI => " + URI.create("/bookmark/" + bookmarkDto.getId().toString()));
+        return Response.created(URI.create("/bookmark/" + bookmarkDto.getId().toString())).build();
     }
 
     @PATCH
     @Counted
     @Path("{id}")
-    public Object update(@PathParam("id") String id, @RequestBody Bookmark bookmark) {
+    public Response update(@PathParam("id") String id, @RequestBody Bookmark bookmark) {
         BookmarkDto bookmarkDto = BookmarkDto.findById(new ObjectId(id));
         if (bookmarkDto == null) {
-            return error.data("error", "Bookmark with id " + id + " has been deleted after loading this form.");
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         BookmarkDto updatedBookNarkDto = bookmarkDto.update(bookmark);
         searchService.updateIndex(Bookmark.fromDto(bookmarkDto), Bookmark.fromDto(updatedBookNarkDto));
 
-        printURIDetails(bookmarkDto);
-
-        return Response.status(Response.Status.MOVED_PERMANENTLY).location(URI.create("/bookmark/" + bookmarkDto.getId().toString())).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Counted
     @Path("{id}")
-    public Object delete(@PathParam("id") String id) {
+    public Response delete(@PathParam("id") String id) {
         BookmarkDto bookmarkDto = BookmarkDto.findById(new ObjectId(id));
 
         if (bookmarkDto == null) {
-            return error.data("error", "Bookmark with id " + id + " has been deleted after loading this form.");
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         bookmarkDto.delete();
