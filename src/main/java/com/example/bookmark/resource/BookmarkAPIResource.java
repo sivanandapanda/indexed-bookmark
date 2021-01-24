@@ -49,9 +49,10 @@ public class BookmarkAPIResource {
         if (bookmarkDto == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
+        Bookmark oldBookMark = Bookmark.fromDto(bookmarkDto);
+        Bookmark updatedBookMark = Bookmark.fromDto(bookmarkDto.update(bookmark));
 
-        BookmarkDto updatedBookNarkDto = bookmarkDto.update(bookmark);
-        searchService.updateIndex(Bookmark.fromDto(bookmarkDto), Bookmark.fromDto(updatedBookNarkDto));
+        searchService.updateIndex(oldBookMark, updatedBookMark);
 
         return Response.status(Response.Status.NO_CONTENT).build();
     }

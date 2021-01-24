@@ -1,23 +1,34 @@
 package com.example.bookmark.elasticsearch;
 
 import com.example.bookmark.model.Bookmark;
+import io.quarkus.redis.client.RedisClient;
+import io.vertx.redis.client.Response;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static java.lang.Math.toIntExact;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 @ApplicationScoped
 public class LocalSearchService {
 
-    private final Map<String, List<Bookmark>> cache = new ConcurrentHashMap<>();
+    @Inject
+    Jsonb jsonb;
+
+    @Inject
+    RedisClient redisClient;
+
+    private static final Type BOOKMARK_LIST_TYPE = new ArrayList<Bookmark>() {}.getClass().getGenericSuperclass();
     private static final List<String> ignoredStrings = Arrays.asList(",", ".", "", " ", "-", "--", "=", "'", "\"", "!", "|", "/", ";", "@", "#",
             "$", "%", "*");
 
@@ -25,10 +36,16 @@ public class LocalSearchService {
         try {
             getAllTags(bookmark).map(String::trim).map(String::toLowerCase)
                     .forEach(tag -> {
-                        List<Bookmark> list = cache.getOrDefault(tag, new ArrayList<>());
-                        if(!list.contains(bookmark)) {
-                            list.add(bookmark);
-                            cache.put(tag, list);
+                        Response response = redisClient.get(tag);
+
+                        if(Objects.isNull(response)) {
+                            redisClient.set(Arrays.asList(tag, jsonb.toJson(singletonList(bookmark))));
+                        } else {
+                            List<Bookmark> bookmarks = jsonb.fromJson(response.toString(), BOOKMARK_LIST_TYPE);
+                            if(!bookmarks.contains(bookmark)) {
+                                bookmarks.add(bookmark);
+                                redisClient.set(Arrays.asList(tag, jsonb.toJson(bookmarks)));
+                            }
                         }
                     });
         } catch (Exception e) {
@@ -43,8 +60,18 @@ public class LocalSearchService {
 
     public void deleteIndex(Bookmark bookmark) {
         try {
-            getAllTags(bookmark).map(String::trim).map(String::toLowerCase).filter(cache::containsKey)
-                    .forEach(tag -> cache.get(tag).removeIf(b -> b.getId().equals(bookmark.getId())));
+            getAllTags(bookmark).map(String::trim).map(String::toLowerCase)
+                    .forEach(tag -> {
+                        Response response = redisClient.get(tag);
+
+                        if(Objects.nonNull(response)) {
+                            List<Bookmark> bookmarks = jsonb.fromJson(response.toString(), BOOKMARK_LIST_TYPE);
+                            boolean remove = bookmarks.removeIf(b -> b.getId().equals(bookmark.getId()));
+                            if(remove) {
+                                redisClient.set(Arrays.asList(tag, jsonb.toJson(bookmarks)));
+                            }
+                        }
+                    });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -57,7 +84,14 @@ public class LocalSearchService {
             return tagList.stream()
                     .map(String::trim)
                     .map(String::toLowerCase)
-                    .map(tag -> cache.containsKey(tag) ? cache.get(tag) : new ArrayList<Bookmark>())
+                    .map(tag -> {
+                        Response response = redisClient.get(tag);
+                        if(Objects.nonNull(response)) {
+                            return jsonb.fromJson(response.toString(), BOOKMARK_LIST_TYPE);
+                        } else {
+                            return new ArrayList<Bookmark>();
+                        }
+                    })
                     .flatMap(List::stream)
                     .distinct()
                     .sorted((b1, b2) -> toIntExact(score(b2, tagList)) - toIntExact(score(b1, tagList)))
@@ -69,12 +103,18 @@ public class LocalSearchService {
     }
 
     private long score(Bookmark bookmark, List<String> list) {
-        return getAllTags(bookmark).filter(list::contains).count();
+        long score = getAllTags(bookmark).filter(list::contains).count();
+        System.out.println("bookmark = " + bookmark + ", list = " + list + ", score = " + score);
+        return score;
     }
 
     public List<Bookmark> searchAll() {
         try {
-            return cache.values().stream().flatMap(List::stream).distinct().collect(toList());
+            Response response = redisClient.keys("*");
+            return jsonb.fromJson(response.toString(), BOOKMARK_LIST_TYPE); //todo test
+
+            //return cache.values().stream().flatMap(List::stream).distinct().collect(toList());
+            //return Collections.emptyList();
         } catch (Exception e) {
             e.printStackTrace();
             return emptyList();

@@ -1,14 +1,13 @@
 package com.example.bookmark.model;
 
-import java.time.format.DateTimeFormatter;
-import java.util.Objects;
-
 import com.example.bookmark.domain.BookmarkDto;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 @Data
 @Builder
